@@ -1,0 +1,16 @@
+@* Views/Student/Create.cshtml *@
+@model DemoMVC1.Models.Student
+
+<h2>Thêm sinh viên</h2>
+<form asp-controller="Student" asp-action="Create" method="post">
+    <label>Họ tên:</label>
+    <input type="text" name="Hoten" />
+
+    <label>Quê quán:</label>
+    <input type="text" name="Quequan" />
+
+    <label>Trường học:</label>
+    <input type="text" name="Truonghoc" />
+
+    <button type="submit">Lưu</button>
+</form>

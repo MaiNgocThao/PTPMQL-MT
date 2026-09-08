@@ -1,0 +1,22 @@
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="Index" method="post">
+    <label>Họ tên:</label>
+    <input type="text" name="hoten" placeholder="Nhập họ tên" /><br />
+
+    <label>Quê quán:</label>
+    <input type="text" name="quequan" placeholder="Nhập quê quán" /><br />
+
+    <label>Trường học:</label>
+    <input type="text" name="truonghoc" placeholder="Nhập trường học" /><br />
+
+    <input type="submit" value="Gửi dữ liệu" />
+</form>
+@if (ViewData["Hoten"] != null)
+{
+    <hr />
+    <h3>Thông tin sinh viên:</h3>
+    <p>Họ tên: @ViewData["Hoten"]</p>
+    <p>Quê quán: @ViewData["Quequan"]</p>
+    <p>Trường học: @ViewData["Truonghoc"]</p>
+}

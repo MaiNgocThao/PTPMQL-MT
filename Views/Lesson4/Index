@@ -1,0 +1,25 @@
+<h1>Nội dung buổi học 3-9</h1>
+Các lưu ý: 
+Ôn lại kiến thức về định tuyến trong MVC
+({controller=Home}: nếu URL không có segment đầu, mặc định dùng Home (tức HomeController)
+{action=Index}: nếu không có segment thứ 2, mặc định gọi action Index
+{id?}: dấu ? nghĩa là optional — có thể có hoặc không
++Khi request đến, Routing Middleware chạy trước MVC, nó parse URL rồi tạo ra 1 RouteData (dictionary chứa controller=..., action=..., id=...), 
+sau đó MVC dùng RouteData này để dùng reflection tìm đúng class Controller + method Action tương ứng để gọi.)
+- Tạo một controller và action
++ Trong Controllers/ Tạo StudentController.cs + ac_controler
+- Tạo view tương ứng với action và controller vừa tạo
+ +Tạo view tương ứng với action và controller vừa tạo:
+ +Views/Student/Index.cshtml
+ 
+- Gửi nhận dữ liệu giữa controller và view: submit form và ViewBag/ViewData
++ Trong Index tạo 1 form submit dữ liệu lên controller, controller nhận dữ liệu và gửi về view thông qua ViewData hoặc ViewBag
++ Khai báo trong form asp-action 
++ Dữ liệu bao gồm các phần tử đã khai báo bên trong controller, ví dụ: ViewData["Hoten"] ...
++ Lưu ý với khi khai báo trong index đảm bảo dữ liệu có trong studentController.cs, nếu không sẽ báo lỗi (ViewData là dữ liệu trùng với khai báo Index)
+ + Có thể dùng 1 thẻ bên index để hiển thị dữ liệu từ controller 
+ + Hoặc chính sửa trực tiếp như ViewData["Hoten"] = "Xin chào " + hoten; hoặc bất cứ trực tiếp trên controller
+
+
+- Gửi nhận dữ liệu giữa controller và view thông qua Model
++Model Binding tự động gom nhiều field rời (hoten, quequan, truonghoc) thành 1 object Student
