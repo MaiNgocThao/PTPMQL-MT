@@ -23,3 +23,54 @@ sau đó MVC dùng RouteData này để dùng reflection tìm đúng class Contr
 
 - Gửi nhận dữ liệu giữa controller và view thông qua Model
 +Model Binding tự động gom nhiều field rời (hoten, quequan, truonghoc) thành 1 object Student
+ViewData["Hoten"] giờ không còn lưu tên thô nữa ("Nguyễn Văn A") mà lưu luôn câu chào hoàn chỉnh ("Xin chào Nguyễn Văn A"). Vì ViewData là Dictionary<string, object>, bạn có thể gán bất kỳ giá trị string nào vào, kể cả kết quả của phép nối chuỗi — nó không quan tâm bạn tính toán gì trước đó, chỉ lưu kết quả cuối cùng.
+@* Views/Student/Index.cshtml *@
+@model DemoMVC.Models.Student
+
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="Index" method="post">
+    <label>Họ tên:</label>
+    <input asp-for="Hoten" placeholder="Nhập họ tên" />
+    <span asp-validation-for="Hoten" style="color:red"></span><br />
+
+    <label>Quê quán:</label>
+    <input asp-for="Quequan" placeholder="Nhập quê quán" />
+    <span asp-validation-for="Quequan" style="color:red"></span><br />
+
+    <label>Trường học:</label>
+    <input asp-for="Truonghoc" placeholder="Nhập trường học" />
+    <span asp-validation-for="Truonghoc" style="color:red"></span><br />
+
+    <input type="submit" value="Gửi dữ liệu" />
+</form>
+
+@if (!string.IsNullOrEmpty(Model?.Hoten))
+{
+    <hr />
+    <h3>Dữ liệu vừa gửi:</h3>
+    <p>Họ tên: @Model.Hoten</p>
+    <p>Quê quán: @Model.Quequan</p>
+    <p>Trường học: @Model.Truonghoc</p>
+}
+
+asp-for="Hoten" tự sinh name="Hoten" và id="Hoten" — thay bạn đảm bảo tên input luôn khớp property, tránh gõ tay sai chính tả như khi dùng name="hoten" thủ công
+
+Buổi 6:
+1.ViewData:
+ - Dùng khi cần từ Controller -> View 
+ -// Controller
+public IActionResult Index()
+{
+    ViewData["Message"] = "Danh sách sinh viên";
+    ViewData["Count"] = 25;
+    return View();
+}
+- Bên View : @ViewData để lấy về giá trị giả sử ở đây là count = 25 thì giá trị hiển thị sẽ là tổng = 25;
+2.ViewBag:
+- Giống ViewData thay vì @ViewData ta dùng ViewBag.Count để in ra giá trị.
+- Đặc điểm : code ngắn gonj hơn nhưng khó kiểm tra lỗi lúc biên dịch vì chỉ báo lỗi khi chạy
+=> ViewData và ViewBag chỉ sống trong một request — sau khi View render xong, dữ liệu mất.
+3. Temp Data:
+-sau khi POST xử lý xong, bạn Redirect sang action khác (GET) để tránh submit lại form khi F5, nhưng vẫn muốn hiển thị thông báo.
+Ví dụ tổng hợp trong Product

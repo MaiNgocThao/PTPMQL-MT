@@ -1,0 +1,15 @@
+<h2>Kết quả</h2>
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+
+<table class="table">
+    <tr><td>Mã sản phẩm:</td><td><b>@TempData["MaSanPham"]</b></td></tr>
+    <tr><td>Tên sản phẩm:</td><td><b>@TempData["TenSanPham"]</b></td></tr>
+    <tr><td>Giá:</td><td><b>@TempData["Gia"]</b> đ</td></tr>
+</table>
+
+<p><i>Xử lý lúc: @ViewData["ThoiGianXuLy"]</i></p>
+
+<a asp-action="Index">← Nhập sản phẩm khác</a>

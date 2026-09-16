@@ -12,11 +12,11 @@
 
     <input type="submit" value="Gửi dữ liệu" />
 </form>
-@if (ViewData["Hoten"] != null)
+@if (!string.IsNullOrEmpty(Model?.Hoten))
 {
     <hr />
     <h3>Thông tin sinh viên:</h3>
-    <p>Họ tên: @ViewData["Hoten"]</p>
-    <p>Quê quán: @ViewData["Quequan"]</p>
-    <p>Trường học: @ViewData["Truonghoc"]</p>
+    <p>Họ tên: @Model.Hoten</p>
+    <p>Quê quán: @Model.Quequan</p>
+    <p>Trường học: @Model.Truonghoc</p>
 }

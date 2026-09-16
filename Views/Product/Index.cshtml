@@ -1,0 +1,26 @@
+@model DemoMVC1.Models.Product
+
+@{
+    ViewData["Title"] = ViewBag.Title;
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="Index" method="post">
+    <div>
+        <label asp-for="MaSanPham">Mã sản phẩm:</label>
+        <input asp-for="MaSanPham" placeholder="Nhập mã sản phẩm..." />
+        <span asp-validation-for="MaSanPham" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="TenSanPham">Tên sản phẩm:</label>
+        <input asp-for="TenSanPham" placeholder="Nhập tên sản phẩm..." />
+        <span asp-validation-for="TenSanPham" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Gia">Giá:</label>
+        <input asp-for="Gia" type="number" step="0.01" placeholder="Nhập giá..." />
+        <span asp-validation-for="Gia" class="text-danger"></span>
+    </div>
+    <button type="submit">Thêm sản phẩm</button>
+</form>
