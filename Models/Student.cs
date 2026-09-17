@@ -4,13 +4,10 @@ namespace DemoMVC1.Models
 {
     public class Student
     {
-        [Required(ErrorMessage = "Họ tên không được để trống")]
-        public string? Hoten { get; set; }
-
-        [Required(ErrorMessage = "Quê quán không được để trống")]
-        public string? Quequan { get; set; }
-
-        [Required(ErrorMessage = "Trường học không được để trống")]
-        public string?  Truonghoc { get; set; }
+        [Key]
+        public string StudentCode { get; set; } = default!;
+        public string FullName { get; set; } = default!;
+        public string? Address { get; set; }
+        public string Email { get; set; } = default!;
     }
 }

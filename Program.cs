@@ -1,4 +1,8 @@
+using DemoMVC1.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DemoMvcDb") ?? throw new InvalidOperationException("Connection string 'DemoMvcDb' not found.")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
