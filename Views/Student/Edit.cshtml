@@ -1,0 +1,60 @@
+@model DemoMVC1.Models.Student
+
+<h2>Sửa thông tin sinh viên</h2>
+
+<form asp-action="Edit" method="post">
+
+    <input type="hidden"
+           name="studentCode"
+           value="@Model.StudentCode" />
+
+    <div>
+        <label asp-for="StudentCode">Mã sinh viên</label>
+
+        <input asp-for="StudentCode" readonly />
+    </div>
+
+    <br />
+
+    <div>
+        <label asp-for="FullName">Họ tên</label>
+
+        <input asp-for="FullName" />
+
+        <span asp-validation-for="FullName"></span>
+    </div>
+
+    <br />
+
+    <div>
+        <label asp-for="Address">Địa chỉ</label>
+
+        <input asp-for="Address" />
+
+        <span asp-validation-for="Address"></span>
+    </div>
+
+    <br />
+
+    <div>
+        <label asp-for="Email">Email</label>
+
+        <input asp-for="Email" />
+
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    <br />
+
+    <button type="submit">Lưu thay đổi</button>
+
+    <a asp-action="Index">Quay lại</a>
+
+</form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

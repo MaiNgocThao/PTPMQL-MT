@@ -7,5 +7,6 @@ namespace DemoMVC1.Data
     {
         public DbSet<Student> Students { get; set; } = default!;
         public DbSet<StudentScore> StudentScores { get; set; } = default!;
+        public DbSet<DemoMVC1.Models.Product> Product { get; set; } = default!;
     }
 }

@@ -1,38 +1,54 @@
-<h1>@ViewData["Title"]</h1>
-@model DemoMVC1.Models.Student
+@model IEnumerable<DemoMVC1.Models.Student>
 
-<form asp-action="Index" method="post">
+<h2>Danh sách sinh viên</h2>
 
-```
-<label>Mã sinh viên:</label>
-<input type="text" name="StudentCode" placeholder="Nhập mã sinh viên" />
-<br />
+<p>
+    <a asp-action="Create">Thêm sinh viên</a>
+</p>
 
-<label>Họ tên:</label>
-<input type="text" name="FullName" placeholder="Nhập họ tên" />
-<br />
+<table border="1" cellpadding="8" cellspacing="0">
 
-<label>Địa chỉ:</label>
-<input type="text" name="Address" placeholder="Nhập địa chỉ" />
-<br />
+    <thead>
+        <tr>
+            <th>Mã sinh viên</th>
+            <th>Họ tên</th>
+            <th>Địa chỉ</th>
+            <th>Email</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
 
-<label>Email:</label>
-<input type="email" name="Email" placeholder="Nhập email" />
-<br />
+    <tbody>
 
-<input type="submit" value="Gửi dữ liệu" />
-```
+        @foreach (var student in Model)
+        {
+            <tr>
+                <td>@student.StudentCode</td>
 
-</form>
+                <td>@student.FullName</td>
 
-@if (!string.IsNullOrEmpty(Model?.FullName))
-{ <hr />
+                <td>@student.Address</td>
 
+                <td>@student.Email</td>
 
-<h3> Thông tin sinh viên:</h3>
+                <td>
 
-<p>Mã sinh viên: @Model.StudentCode</p>
-<p>Họ tên: @Model.FullName</p>
-<p>Địa chỉ: @Model.Address</p>
-<p>Email: @Model.Email</p>
-}
+                    <a asp-action="Edit"
+                       asp-route-studentCode="@student.StudentCode">
+                        Sửa
+                    </a>
+
+                    |
+
+                    <a asp-action="Delete"
+                       asp-route-studentCode="@student.StudentCode">
+                        Xóa
+                    </a>
+
+                </td>
+            </tr>
+        }
+
+    </tbody>
+
+</table>

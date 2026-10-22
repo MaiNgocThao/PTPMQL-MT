@@ -1,19 +1,54 @@
-
 @model DemoMVC1.Models.Student
 
 <h2>Thêm sinh viên</h2>
-<form asp-controller="Student" asp-action="Create" method="post">
-    <label>Mã sinh viên:</label>
-    <input type="text" name="StudentCode" />
 
-    <label>Họ tên:</label>
-    <input type="text" name="FullName" />
+<form asp-action="Create" method="post">
 
-    <label>Địa chỉ:</label>
-    <input type="text" name="Address" />
+    <div>
+        <label asp-for="StudentCode">Mã sinh viên</label>
+        <input asp-for="StudentCode" />
 
-    <label>Email:</label>
-    <input type="email" name="Email" />
+        <span asp-validation-for="StudentCode"></span>
+    </div>
 
-    <button type="submit">Lưu</button>
+    <br />
+
+    <div>
+        <label asp-for="FullName">Họ tên</label>
+        <input asp-for="FullName" />
+
+        <span asp-validation-for="FullName"></span>
+    </div>
+
+    <br />
+
+    <div>
+        <label asp-for="Address">Địa chỉ</label>
+        <input asp-for="Address" />
+
+        <span asp-validation-for="Address"></span>
+    </div>
+
+    <br />
+
+    <div>
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" />
+
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    <br />
+
+    <button type="submit">Thêm</button>
+
+    <a asp-action="Index">Quay lại</a>
+
 </form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -4,6 +4,7 @@ namespace DemoMVC1.Models
 {
     public class Product
     {
+        [Key]
         [Required(ErrorMessage = "Vui lòng nhập mã sản phẩm")]
         public string? MaSanPham { get; set; }
 
