@@ -2,19 +2,34 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DemoMVC1.Models
 {
-    public class Student
+    public class NewBaseType
+    {
+        public Faculty? Faculty { get; set; }
+    }
+
+    public interface IStudent
+    {
+        string StudentCode { get; set; }
+        string FullName { get; set; }
+        string? Address { get; set; }
+        string Email { get; set; }
+        int FacultyId { get; set; }
+    }
+
+    public class Student : NewBaseType, IStudent
     {
         [Key]
         [Required(ErrorMessage = "Mã sinh viên không được để trống")]
         [StringLength(10, MinimumLength = 3,
             ErrorMessage = "Mã sinh viên phải từ 3 đến 10 ký tự")]
-        public string StudentCode { get; set; } = default!;
+        public string StudentCode { get; set; } = string.Empty;
+
 
 
         [Required(ErrorMessage = "Họ tên không được để trống")]
         [StringLength(50,
             ErrorMessage = "Họ tên không được vượt quá 50 ký tự")]
-        public string FullName { get; set; } = default!;
+        public string FullName { get; set; } = string.Empty;
 
 
         [StringLength(100,
@@ -24,6 +39,10 @@ namespace DemoMVC1.Models
 
         [Required(ErrorMessage = "Email không được để trống")]
         [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
-        public string Email { get; set; } = default!;
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng chọn khoa")]
+        public int FacultyId { get; set; }
+        public new Faculty? Faculty { get; set; }
     }
 }

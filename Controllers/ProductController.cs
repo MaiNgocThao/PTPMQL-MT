@@ -22,7 +22,7 @@ namespace DemoMVC1.Controllers
         // GET: Product
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Product.ToListAsync());
+            return View(await _context.GetProduct().ToListAsync());
         }
 
         // GET: Product/Details/5
@@ -33,7 +33,7 @@ namespace DemoMVC1.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Product
+            var product = await _context.GetProduct()
                 .FirstOrDefaultAsync(m => m.MaSanPham == id);
             if (product == null)
             {
@@ -73,7 +73,7 @@ namespace DemoMVC1.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Product.FindAsync(id);
+            var product = await _context.GetProduct().FindAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -124,7 +124,7 @@ namespace DemoMVC1.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Product
+            var product = await _context.GetProduct()
                 .FirstOrDefaultAsync(m => m.MaSanPham == id);
             if (product == null)
             {
@@ -139,10 +139,10 @@ namespace DemoMVC1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var product = await _context.Product.FindAsync(id);
+            var product = await _context.GetProduct().FindAsync(id);
             if (product != null)
             {
-                _context.Product.Remove(product);
+                _context.GetProduct().Remove(product);
             }
 
             await _context.SaveChangesAsync();
@@ -151,7 +151,7 @@ namespace DemoMVC1.Controllers
 
         private bool ProductExists(string id)
         {
-            return _context.Product.Any(e => e.MaSanPham == id);
+            return _context.GetProduct().Any(e => e.MaSanPham == id);
         }
     }
 }

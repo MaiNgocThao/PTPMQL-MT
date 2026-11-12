@@ -16,21 +16,82 @@ namespace DemoMVC1.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
-            modelBuilder.Entity("DemoMVC1.Models.Product", b =>
+            modelBuilder.Entity("DemoMVC1.Models.Faculty", b =>
                 {
-                    b.Property<string>("MaSanPham")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("FacultyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<double>("Gia")
-                        .HasColumnType("REAL");
-
-                    b.Property<string>("TenSanPham")
+                    b.Property<string>("FacultyName")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.HasKey("MaSanPham");
+                    b.HasKey("FacultyId");
 
-                    b.ToTable("Product");
+                    b.ToTable("Faculties");
+
+                    b.HasData(
+                        new
+                        {
+                            FacultyId = 1,
+                            FacultyName = "Khoa Công nghệ thông tin"
+                        },
+                        new
+                        {
+                            FacultyId = 2,
+                            FacultyName = "Khoa Dầu khí"
+                        },
+                        new
+                        {
+                            FacultyId = 3,
+                            FacultyName = "Khoa Cơ - Điện"
+                        },
+                        new
+                        {
+                            FacultyId = 4,
+                            FacultyName = "Khoa Xây dựng"
+                        },
+                        new
+                        {
+                            FacultyId = 5,
+                            FacultyName = "Khoa Mỏ"
+                        },
+                        new
+                        {
+                            FacultyId = 6,
+                            FacultyName = "Khoa Môi trường"
+                        },
+                        new
+                        {
+                            FacultyId = 7,
+                            FacultyName = "Khoa Kinh tế - Quản trị kinh doanh"
+                        },
+                        new
+                        {
+                            FacultyId = 8,
+                            FacultyName = "Khoa Khoa học và ký thuật Địa chất"
+                        },
+                        new
+                        {
+                            FacultyId = 9,
+                            FacultyName = "Khoa Trắc địa - Bản đồ và Quản lý đất đai"
+                        },
+                        new
+                        {
+                            FacultyId = 10,
+                            FacultyName = "Khoa Khoa học Cơ bản"
+                        },
+                        new
+                        {
+                            FacultyId = 11,
+                            FacultyName = "Khoa Lý luận chính trị"
+                        },
+                        new
+                        {
+                            FacultyId = 12,
+                            FacultyName = "Khoa Dầu khí"
+                        });
                 });
 
             modelBuilder.Entity("DemoMVC1.Models.Student", b =>
@@ -47,12 +108,17 @@ namespace DemoMVC1.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("FacultyId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("StudentCode");
+
+                    b.HasIndex("FacultyId");
 
                     b.ToTable("Students");
                 });
@@ -77,6 +143,18 @@ namespace DemoMVC1.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("StudentScores");
+                });
+
+            modelBuilder.Entity("DemoMVC1.Models.Student", b =>
+                {
+                    b.HasOne("DemoMVC1.Models.Faculty", null)
+                        .WithMany("Students")
+                        .HasForeignKey("FacultyId");
+                });
+
+            modelBuilder.Entity("DemoMVC1.Models.Faculty", b =>
+                {
+                    b.Navigation("Students");
                 });
 #pragma warning restore 612, 618
         }
