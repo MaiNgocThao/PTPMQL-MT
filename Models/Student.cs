@@ -13,7 +13,8 @@ namespace DemoMVC1.Models
         string FullName { get; set; }
         string? Address { get; set; }
         string Email { get; set; }
-        int FacultyId { get; set; }
+        int? FacultyId { get; set; }
+        int? EnrollmentYear { get; set; }
     }
 
     public class Student : NewBaseType, IStudent
@@ -41,8 +42,9 @@ namespace DemoMVC1.Models
         [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Vui lòng chọn khoa")]
-        public int FacultyId { get; set; }
+        public int? FacultyId { get; set; }
+        [Range(2000, 2099, ErrorMessage = "Năm nhập học phải từ 2000 đến 2099")]
+        public int? EnrollmentYear { get; set; }
         public new Faculty? Faculty { get; set; }
     }
 }

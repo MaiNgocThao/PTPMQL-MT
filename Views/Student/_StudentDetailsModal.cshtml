@@ -1,0 +1,16 @@
+@model DemoMVC1.Models.Student
+
+<div class="modal-header">
+    <h2 class="modal-title fs-5">Chi tiết sinh viên</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+<div class="modal-body">
+    <partial name="_StudentDetails" model="Model" />
+</div>
+<div class="modal-footer">
+    <a asp-action="Edit"
+       asp-route-studentCode="@Model.StudentCode"
+       class="btn btn-primary"
+       data-student-modal-url="@Url.Action("Edit", new { studentCode = Model.StudentCode })">Sửa</a>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+</div>

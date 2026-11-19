@@ -32,10 +32,20 @@
     </div>
 
     <div class="form-group mb-3">
+        <label asp-for="EnrollmentYear">Năm nhập học</label>
+        <input asp-for="EnrollmentYear"
+               class="form-control"
+               type="number"
+               readonly />
+        <small class="text-muted">Năm nhập học không thay đổi mã sinh viên hiện tại.</small>
+    </div>
+
+    <div class="form-group mb-3">
         <label asp-for="FacultyId">Khoa</label>
         <select asp-for="FacultyId"
                 asp-items="ViewBag.FacultyId"
-                class="form-control">
+                class="form-control"
+                required>
             <option value="">-- Chọn khoa --</option>
         </select>
         <span asp-validation-for="FacultyId" class="text-danger"></span>

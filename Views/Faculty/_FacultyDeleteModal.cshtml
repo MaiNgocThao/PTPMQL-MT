@@ -1,0 +1,21 @@
+@model DemoMVC1.Models.Faculty
+
+<div class="modal-header">
+    <h2 class="modal-title fs-5">Xác nhận xóa khoa</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+<form asp-action="Delete"
+      asp-route-facultyId="@Model.FacultyId"
+      method="post"
+      class="faculty-delete-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="facultyId" value="@Model.FacultyId" />
+    <div class="modal-body">
+        <p>Bạn có chắc muốn xóa khoa <strong>@Model.FacultyName</strong> không?</p>
+        <p class="text-muted mb-0">Không thể xóa nếu khoa đang có sinh viên tham chiếu.</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    </div>
+</form>

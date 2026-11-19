@@ -1,0 +1,83 @@
+@model DemoMVC1.Models.Student
+
+@{
+    var isEdit = !string.IsNullOrEmpty(Model.StudentCode);
+    var formAction = isEdit
+        ? Url.Action("Edit", "Student", new { studentCode = Model.StudentCode })
+        : Url.Action("Create", "Student");
+}
+
+<div class="modal-header">
+    <h2 class="modal-title fs-5">@(isEdit ? "Sửa thông tin sinh viên" : "Thêm sinh viên")</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+
+<form action="@formAction" method="post" class="student-ajax-form">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        @if (isEdit)
+        {
+            <input asp-for="StudentCode" type="hidden" />
+            <div class="mb-3">
+                <label asp-for="StudentCode" class="form-label">Mã sinh viên</label>
+                <input value="@Model.StudentCode" class="form-control" readonly />
+            </div>
+        }
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Họ và tên</label>
+            <input asp-for="FullName" class="form-control" autocomplete="name" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label">Địa chỉ</label>
+            <input asp-for="Address" class="form-control" autocomplete="street-address" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="EnrollmentYear" class="form-label">Năm nhập học</label>
+            @if (isEdit)
+            {
+                <input asp-for="EnrollmentYear"
+                       class="form-control"
+                       type="number"
+                       readonly />
+                <small class="text-muted">Năm nhập học không thay đổi mã sinh viên hiện tại.</small>
+            }
+            else
+            {
+                <input asp-for="EnrollmentYear"
+                       class="form-control"
+                       type="number"
+                       min="2000"
+                       max="2099"
+                       required />
+                <span asp-validation-for="EnrollmentYear" class="text-danger"></span>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="FacultyId" class="form-label">Khoa</label>
+            <select asp-for="FacultyId" asp-items="ViewBag.FacultyId" class="form-select" required>
+                <option value="">-- Chọn khoa --</option>
+            </select>
+            <span asp-validation-for="FacultyId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-primary">@(isEdit ? "Lưu thay đổi" : "Thêm sinh viên")</button>
+    </div>
+</form>

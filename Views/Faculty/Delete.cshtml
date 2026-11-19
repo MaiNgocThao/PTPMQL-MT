@@ -1,0 +1,15 @@
+@model DemoMVC1.Models.Faculty
+
+@{
+    ViewData["Title"] = "Xóa khoa";
+}
+
+<h1>Xóa khoa</h1>
+<p>Bạn có chắc muốn xóa khoa <strong>@Model.FacultyName</strong> không?</p>
+<p class="text-muted">Không thể xóa nếu khoa đang có sinh viên tham chiếu.</p>
+<form asp-action="Delete" asp-route-facultyId="@Model.FacultyId" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="facultyId" value="@Model.FacultyId" />
+    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

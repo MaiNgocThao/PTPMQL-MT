@@ -1,0 +1,117 @@
+@model DemoMVC1.Models.StudentListViewModel
+
+<div class="student-list-results" data-current-page="@Model.Page">
+@if (Model.Students.Count == 0)
+{
+    <div class="alert alert-info" role="status">
+        Không tìm thấy sinh viên phù hợp.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Mã sinh viên</th>
+                    <th scope="col">Họ tên</th>
+                    <th scope="col">Địa chỉ</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Khoa</th>
+                    <th scope="col">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var student in Model.Students)
+                {
+                    <tr>
+                        <td>@student.StudentCode</td>
+                        <td>@student.FullName</td>
+                        <td>@student.Address</td>
+                        <td>@student.Email</td>
+                        <td>@(student.FacultyName ?? "Chưa có khoa")</td>
+                        <td class="text-nowrap">
+                            <a asp-action="Details"
+                               asp-route-studentCode="@student.StudentCode"
+                               class="btn btn-sm btn-outline-secondary"
+                               data-student-modal-url="@Url.Action("Details", new { studentCode = student.StudentCode })">Chi tiết</a>
+                            <a asp-action="Edit"
+                               asp-route-studentCode="@student.StudentCode"
+                               class="btn btn-sm btn-outline-primary"
+                               data-student-modal-url="@Url.Action("Edit", new { studentCode = student.StudentCode })">Sửa</a>
+                            <a asp-action="Delete"
+                               asp-route-studentCode="@student.StudentCode"
+                               class="btn btn-sm btn-outline-danger"
+                               data-student-modal-url="@Url.Action("Delete", new { studentCode = student.StudentCode })">Xóa</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+            Hiển thị @((Model.Page - 1) * Model.PageSize + 1)-@Math.Min(Model.Page * Model.PageSize, Model.TotalCount)
+            trên tổng @Model.TotalCount sinh viên
+        </span>
+
+        <nav aria-label="Phân trang danh sách sinh viên">
+            <ul class="pagination mb-0">
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link student-page-link"
+                       asp-action="Index"
+                       asp-route-searchTerm="@Model.SearchTerm"
+                       asp-route-page="1"
+                       asp-route-pageSize="@Model.PageSize"
+                       data-page="1"
+                       aria-label="Trang đầu">Đầu</a>
+                </li>
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link student-page-link"
+                       asp-action="Index"
+                       asp-route-searchTerm="@Model.SearchTerm"
+                       asp-route-page="@(Model.Page - 1)"
+                       asp-route-pageSize="@Model.PageSize"
+                       data-page="@(Model.Page - 1)"
+                       aria-label="Trang trước">Trước</a>
+                </li>
+
+                @for (var pageNumber = Math.Max(1, Model.Page - 2);
+                      pageNumber <= Math.Min(Model.TotalPages, Model.Page + 2);
+                      pageNumber++)
+                {
+                    <li class="page-item @(pageNumber == Model.Page ? "active" : "")">
+                        <a class="page-link student-page-link"
+                           asp-action="Index"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-page="@pageNumber"
+                           asp-route-pageSize="@Model.PageSize"
+                           data-page="@pageNumber"
+                           aria-current="@(pageNumber == Model.Page ? "page" : null)">@pageNumber</a>
+                    </li>
+                }
+
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link student-page-link"
+                       asp-action="Index"
+                       asp-route-searchTerm="@Model.SearchTerm"
+                       asp-route-page="@(Model.Page + 1)"
+                       asp-route-pageSize="@Model.PageSize"
+                       data-page="@(Model.Page + 1)"
+                       aria-label="Trang sau">Sau</a>
+                </li>
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link student-page-link"
+                       asp-action="Index"
+                       asp-route-searchTerm="@Model.SearchTerm"
+                       asp-route-page="@Model.TotalPages"
+                       asp-route-pageSize="@Model.PageSize"
+                       data-page="@Model.TotalPages"
+                       aria-label="Trang cuối">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+</div>

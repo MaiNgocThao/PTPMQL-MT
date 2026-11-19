@@ -1,0 +1,18 @@
+@model DemoMVC1.Models.Faculty
+
+@{
+    ViewData["Title"] = "Thêm khoa";
+}
+
+<h1>Thêm khoa</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="FacultyName" class="form-label">Tên khoa</label>
+        <input asp-for="FacultyName" class="form-control" required />
+        <span asp-validation-for="FacultyName" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Thêm khoa</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

@@ -1,0 +1,68 @@
+@model DemoMVC1.Models.FacultyListViewModel
+
+<div class="faculty-list-results" data-current-page="@Model.Page">
+@if (Model.Faculties.Count == 0)
+{
+    <div class="alert alert-info">Không tìm thấy khoa phù hợp.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Mã khoa</th>
+                    <th>Tên khoa</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var faculty in Model.Faculties)
+                {
+                    <tr>
+                        <td>@faculty.FacultyId</td>
+                        <td>@faculty.FacultyName</td>
+                        <td class="text-nowrap">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    data-faculty-modal-url="@Url.Action("Details", new { facultyId = faculty.FacultyId })">Chi tiết</button>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-faculty-modal-url="@Url.Action("Edit", new { facultyId = faculty.FacultyId })">Sửa</button>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-faculty-modal-url="@Url.Action("Delete", new { facultyId = faculty.FacultyId })">Xóa</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Hiển thị @((Model.Page - 1) * Model.PageSize + 1)-@Math.Min(Model.Page * Model.PageSize, Model.TotalCount) trên tổng @Model.TotalCount khoa</span>
+        <nav aria-label="Phân trang danh sách khoa">
+            <ul class="pagination mb-0">
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link faculty-page-link" href="#" data-page="1">Đầu</a>
+                </li>
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link faculty-page-link" href="#" data-page="@(Model.Page - 1)">Trước</a>
+                </li>
+                @for (var pageNumber = Math.Max(1, Model.Page - 2); pageNumber <= Math.Min(Model.TotalPages, Model.Page + 2); pageNumber++)
+                {
+                    <li class="page-item @(pageNumber == Model.Page ? "active" : "")">
+                        <a class="page-link faculty-page-link" href="#" data-page="@pageNumber">@pageNumber</a>
+                    </li>
+                }
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link faculty-page-link" href="#" data-page="@(Model.Page + 1)">Sau</a>
+                </li>
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link faculty-page-link" href="#" data-page="@Model.TotalPages">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+</div>

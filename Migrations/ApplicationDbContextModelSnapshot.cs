@@ -108,6 +108,9 @@ namespace DemoMVC1.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("EnrollmentYear")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("FacultyId")
                         .HasColumnType("INTEGER");
 
@@ -147,9 +150,11 @@ namespace DemoMVC1.Migrations
 
             modelBuilder.Entity("DemoMVC1.Models.Student", b =>
                 {
-                    b.HasOne("DemoMVC1.Models.Faculty", null)
+                    b.HasOne("DemoMVC1.Models.Faculty", "Faculty")
                         .WithMany("Students")
                         .HasForeignKey("FacultyId");
+
+                    b.Navigation("Faculty");
                 });
 
             modelBuilder.Entity("DemoMVC1.Models.Faculty", b =>

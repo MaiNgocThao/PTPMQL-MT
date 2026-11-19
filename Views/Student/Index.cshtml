@@ -1,57 +1,267 @@
-@model IEnumerable<DemoMVC1.Models.Student>
+@model DemoMVC1.Models.StudentListViewModel
 
-<h2>Danh sách sinh viên</h2>
+@{
+    ViewData["Title"] = "Danh sách sinh viên";
+}
+
+<h1>Danh sách sinh viên</h1>
 
 <p>
-    <a asp-action="Create">Thêm sinh viên</a>
+    <a asp-action="Create"
+       class="btn btn-primary"
+       data-student-modal-url="@Url.Action("Create")">Thêm sinh viên</a>
 </p>
 
-<table border="1" cellpadding="8" cellspacing="0">
+<div id="student-crud-message" class="alert d-none" role="status" aria-live="polite"></div>
 
-    <thead>
-        <tr>
-            <th>Mã sinh viên</th>
-            <th>Họ tên</th>
-            <th>Địa chỉ</th>
-            <th>Email</th>
-            <th>Khoa</th>
-            <th>Thao tác</th>
-        </tr>
-    </thead>
+<div class="row g-2 align-items-end mb-3">
+    <div class="col-md-6">
+        <label for="student-search-input" class="form-label">Tìm kiếm sinh viên</label>
+        <input id="student-search-input"
+               class="form-control"
+               type="search"
+               value="@Model.SearchTerm"
+               placeholder="Mã, họ tên, địa chỉ, email hoặc khoa"
+               autocomplete="off" />
+    </div>
+    <div class="col-auto">
+        <button id="student-search-button" type="button" class="btn btn-primary">Tìm kiếm</button>
+        <button id="student-clear-search-button" type="button" class="btn btn-outline-secondary">Xóa từ khóa</button>
+    </div>
+    <div class="col-auto ms-md-auto">
+        <label for="student-page-size" class="form-label">Số dòng mỗi trang</label>
+        <select id="student-page-size" class="form-select">
+            @foreach (var size in new[] { 5, 10, 20, 50 })
+            {
+                if (Model.PageSize == size)
+                {
+                    <option value="@size" selected>@size</option>
+                }
+                else
+                {
+                    <option value="@size">@size</option>
+                }
+            }
+        </select>
+    </div>
+</div>
 
-    <tbody>
+<div id="student-list-error" class="alert alert-danger d-none" role="alert"></div>
+<div id="student-list-loading" class="text-center py-3 d-none" role="status">
+    Đang tải danh sách...
+</div>
+<div id="student-list-container" aria-live="polite">
+    <partial name="_StudentList" model="Model" />
+</div>
 
-        @foreach (var student in Model)
-        {
-            <tr>
-                <td>@student.StudentCode</td>
+<div class="modal fade" id="student-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="student-modal-content"></div>
+    </div>
+</div>
 
-                <td>@student.FullName</td>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 
-                <td>@student.Address</td>
+    <script>
+        $(function () {
+            const $searchInput = $("#student-search-input");
+            const $pageSize = $("#student-page-size");
+            const $listContainer = $("#student-list-container");
+            const $loading = $("#student-list-loading");
+            const $error = $("#student-list-error");
+            const $message = $("#student-crud-message");
+            const $modal = $("#student-modal");
+            const $modalContent = $("#student-modal-content");
+            const modal = bootstrap.Modal.getOrCreateInstance($modal[0]);
+            let searchTimeout;
+            let activeRequest;
+            let modalRequest;
+            let currentPage = @Model.Page;
 
-                <td>@student.Email</td>
+            function loadStudents(page) {
+                if (activeRequest) {
+                    activeRequest.abort();
+                }
 
-                <td>@student.Faculty.FacultyName</td>
+                $loading.removeClass("d-none");
+                $error.addClass("d-none").text("");
+                $listContainer.attr("aria-busy", "true");
 
-                <td>
+                const request = $.ajax({
+                    url: "@Url.Action("Index", "Student")",
+                    method: "GET",
+                    dataType: "html",
+                    data: {
+                        searchTerm: $searchInput.val(),
+                        page: page,
+                        pageSize: $pageSize.val()
+                    }
+                });
+                activeRequest = request;
 
-                    <a asp-action="Edit"
-                       asp-route-studentCode="@student.StudentCode">
-                        Sửa
-                    </a>
+                request
+                    .done(function (html) {
+                        $listContainer.html(html);
+                        currentPage = Number(
+                            $listContainer.find(".student-list-results").data("current-page")
+                        ) || 1;
+                    })
+                    .fail(function (_xhr, status) {
+                        if (status !== "abort") {
+                            $error.text("Không thể tải danh sách sinh viên. Vui lòng thử lại.")
+                                .removeClass("d-none");
+                        }
+                    })
+                    .always(function () {
+                        if (activeRequest !== request) {
+                            return;
+                        }
 
-                    |
+                        activeRequest = null;
+                        $loading.addClass("d-none");
+                        $listContainer.removeAttr("aria-busy");
+                    });
+            }
 
-                    <a asp-action="Delete"
-                       asp-route-studentCode="@student.StudentCode">
-                        Xóa
-                    </a>
+            function showStudentMessage(message, succeeded) {
+                    $message
+                        .text(message)
+                        .removeClass("d-none alert-success alert-danger")
+                        .addClass(succeeded ? "alert-success" : "alert-danger");
+            }
 
-                </td>
-            </tr>
-        }
+            function openStudentModal(url) {
+                    if (modalRequest) {
+                        modalRequest.abort();
+                    }
 
-    </tbody>
+                    $modalContent.html(
+                        '<div class="modal-body text-center" role="status">Đang tải...</div>'
+                    );
+                    modal.show();
 
-</table>
+                    const request = $.ajax({
+                        url: url,
+                        method: "GET",
+                        dataType: "html"
+                    });
+                    modalRequest = request;
+
+                    request
+                        .done(function (html) {
+                            if (modalRequest !== request) {
+                                return;
+                            }
+
+                            $modalContent.html(html);
+                            $.validator.unobtrusive.parse($modalContent);
+                        })
+                        .fail(function (_xhr, status) {
+                            if (status !== "abort" && modalRequest === request) {
+                                $modalContent.html(
+                                    '<div class="modal-body"><div class="alert alert-danger mb-0" role="alert">Không thể tải thông tin sinh viên. Vui lòng thử lại.</div></div>'
+                                );
+                            }
+                        })
+                        .always(function () {
+                            if (modalRequest === request) {
+                                modalRequest = null;
+                            }
+                        });
+            }
+
+            $(document).on("click", "[data-student-modal-url]", function (event) {
+                    event.preventDefault();
+                    $message.addClass("d-none");
+                    openStudentModal($(this).attr("data-student-modal-url"));
+            });
+
+            $modalContent.on(
+                    "submit",
+                    ".student-ajax-form, .student-delete-form",
+                    function (event) {
+                        event.preventDefault();
+
+                        const $form = $(this);
+                        if ($form.data("validator") && !$form.valid()) {
+                            return;
+                        }
+
+                        const $submitButton = $form.find('[type="submit"]');
+                        const originalText = $submitButton.text();
+                        $submitButton.prop("disabled", true).text("Đang xử lý...");
+
+                        $.ajax({
+                            url: $form.attr("action"),
+                            method: $form.attr("method") || "POST",
+                            data: $form.serialize()
+                        })
+                            .done(function (result) {
+                                modal.hide();
+                                showStudentMessage(result.message, true);
+                                loadStudents(currentPage);
+                            })
+                            .fail(function (xhr) {
+                                if (xhr.status === 422 && xhr.responseText) {
+                                    $modalContent.html(xhr.responseText);
+                                    $.validator.unobtrusive.parse($modalContent);
+                                    return;
+                                }
+
+                                const responseMessage =
+                                    xhr.responseJSON && xhr.responseJSON.message;
+                                showStudentMessage(
+                                    responseMessage || "Không thể lưu thay đổi. Vui lòng thử lại.",
+                                    false
+                                );
+                            })
+                            .always(function () {
+                                $submitButton.prop("disabled", false).text(originalText);
+                            });
+                    }
+            );
+
+            $("#student-search-button").on("click", function () {
+                loadStudents(1);
+            });
+
+            $("#student-clear-search-button").on("click", function () {
+                $searchInput.val("");
+                loadStudents(1);
+                $searchInput.trigger("focus");
+            });
+
+            $searchInput.on("input", function () {
+                window.clearTimeout(searchTimeout);
+                searchTimeout = window.setTimeout(function () {
+                    loadStudents(1);
+                }, 350);
+            });
+
+            $searchInput.on("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    window.clearTimeout(searchTimeout);
+                    loadStudents(1);
+                }
+            });
+
+            $pageSize.on("change", function () {
+                loadStudents(1);
+            });
+
+            $listContainer.on("click", ".student-page-link", function (event) {
+                event.preventDefault();
+                if ($(this).closest(".page-item").hasClass("disabled") ||
+                    $(this).closest(".page-item").hasClass("active")) {
+                    return;
+                }
+
+                loadStudents(Number($(this).data("page")));
+            });
+        });
+    </script>
+}

@@ -11,68 +11,84 @@ namespace DemoMVC1.Controllers
         private readonly ApplicationDbContext _context = context;
 
         // Hàm tự động sinh mã sinh viên
-        private async Task<string> GenerateStudentCode(int FacultyId)
+        private async Task<string> GenerateStudentCode(int facultyId, int enrollmentYear)
         {
-            var majorCodes = new Dictionary<int, string>
-    {
-    { 1, "05" }, // Khoa Công nghệ thông tin
-    { 2, "02" }, // Khoa Dầu khí
-    { 3, "03" }, // Khoa Cơ - Điện
-    { 4, "04" }, // Khoa Xây dựng
-    { 5, "01" }, // Khoa Mỏ
-    { 6, "06" }, // Khoa Môi trường
-    { 7, "07" }, // Khoa Kinh tế - Quản trị kinh doanh
-    { 8, "08" }, // Khoa Khoa học và Kỹ thuật Địa chất
-    { 9, "09" }, // Khoa Trắc địa - Bản đồ và Quản lý đất đai
-    { 10, "10" }, // Khoa Khoa học Cơ bản
-    { 11, "11" }, // Khoa Lý luận chính trị
-    { 12, "12" }  // Khoa Dầu khí
+            var faculty = await _context.Faculties
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.FacultyId == facultyId);
 
-    };
-
-    if (!majorCodes.TryGetValue(FacultyId, out string? majorCode))
-    {
-        throw new InvalidOperationException(
-            "Chưa khai báo mã ngành cho khoa được chọn.");
-    }
-
-    string prefix = "2821" + majorCode;
-
-
-            var studentCodes = await _context.Students
-                .Where(s => s.StudentCode.StartsWith(prefix))
-                .Select(s => s.StudentCode)
-                .ToListAsync();
-
-            int maxNumber = 0;
-
-            foreach (var code in studentCodes)
+            if (faculty == null)
             {
-                if (code.Length != 10)
-                    continue;
+                throw new InvalidOperationException("Khoa được chọn không tồn tại.");
+            }
 
-                string numberPart = code.Substring(6, 4);
+            var majorCode = GetMajorCode(faculty.FacultyName);
+            if (majorCode == null)
+            {
+                throw new InvalidOperationException(
+                    $"Chưa khai báo mã ngành cho khoa \"{faculty.FacultyName}\".");
+            }
 
-                if (int.TryParse(numberPart, out int number))
+            var yy = (enrollmentYear % 100).ToString("D2");
+            var prefix = yy + "21" + majorCode;
+
+            for (var attempt = 0; attempt < 10000; attempt++)
+            {
+                var studentCodes = await _context.Students
+                    .AsNoTracking()
+                    .Where(s => s.StudentCode.Length == 10 &&
+                                s.StudentCode.StartsWith(prefix))
+                    .Select(s => s.StudentCode)
+                    .ToListAsync();
+
+                var maxNumber = 0;
+                foreach (var code in studentCodes)
                 {
-                    if (number > maxNumber)
+                    if (int.TryParse(code.Substring(6, 4), out var number))
                     {
-                        maxNumber = number;
+                        maxNumber = Math.Max(maxNumber, number);
                     }
+                }
+
+                var nextNumber = maxNumber + 1;
+                if (nextNumber > 9999)
+                {
+                    throw new InvalidOperationException(
+                        $"Đã hết số thứ tự sinh viên cho mã {prefix}");
+                }
+
+                var candidate = prefix + nextNumber.ToString("D4");
+                var exists = await _context.Students
+                    .AsNoTracking()
+                    .AnyAsync(s => s.StudentCode == candidate);
+
+                if (!exists)
+                {
+                    return candidate;
                 }
             }
 
-            int nextNumber = maxNumber + 1;
+            throw new InvalidOperationException(
+                "Không thể sinh mã sinh viên duy nhất. Vui lòng thử lại.");
+        }
 
-            if (nextNumber > 9999)
-            {
-                throw new InvalidOperationException(
-                    $"Đã hết số thứ tự sinh viên cho mã {prefix}."
+        private static string? GetMajorCode(string facultyName)
+        {
+            var name = facultyName.ToLowerInvariant();
 
-                );
-            }
+            if (name.Contains("công nghệ thông tin")) return "05";
+            if (name.Contains("dầu khí")) return "02";
+            if (name.Contains("cơ") && name.Contains("điện")) return "03";
+            if (name.Contains("xây dựng")) return "04";
+            if (name.Contains("mỏ")) return "01";
+            if (name.Contains("môi trường")) return "06";
+            if (name.Contains("kinh tế") || name.Contains("quản trị kinh doanh")) return "07";
+            if (name.Contains("địa chất")) return "08";
+            if (name.Contains("trắc địa")) return "09";
+            if (name.Contains("khoa học cơ bản")) return "10";
+            if (name.Contains("lý luận chính trị")) return "11";
 
-            return prefix + nextNumber.ToString("D4");
+            return null;
         }
 
         // Hàm nạp danh sách khoa vào dropdown
@@ -86,14 +102,91 @@ namespace DemoMVC1.Controllers
             );
         }
 
-        // READ - Danh sách sinh viên
-        public async Task<IActionResult> Index()
+        private bool IsAjaxRequest()
         {
-            var students = await _context.Students
-                .Include(s => s.Faculty)
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+        }
+
+        private IActionResult InvalidStudentForm(Student student)
+        {
+            if (IsAjaxRequest())
+            {
+                var result = PartialView("_StudentFormModal", student);
+                result.StatusCode = StatusCodes.Status422UnprocessableEntity;
+                return result;
+            }
+
+            return View(student);
+        }
+
+        private IActionResult StudentNotFound(string message)
+        {
+            return IsAjaxRequest()
+                ? NotFound(new { message })
+                : NotFound();
+        }
+
+        // READ - Danh sách sinh viên
+        public async Task<IActionResult> Index(string? searchTerm, int page = 1, int pageSize = 10)
+        {
+            int[] allowedPageSizes = [5, 10, 20, 50];
+            if (!allowedPageSizes.Contains(pageSize))
+            {
+                pageSize = 10;
+            }
+
+            searchTerm = searchTerm?.Trim();
+
+            var studentsQuery = _context.Students.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                studentsQuery = studentsQuery.Where(s =>
+                    s.StudentCode.Contains(searchTerm) ||
+                    s.FullName.Contains(searchTerm) ||
+                    (s.Address != null && s.Address.Contains(searchTerm)) ||
+                    s.Email.Contains(searchTerm) ||
+                    _context.Faculties.Any(f =>
+                        f.FacultyId == s.FacultyId &&
+                        f.FacultyName.Contains(searchTerm)));
+            }
+
+            int totalCount = await studentsQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = totalPages == 0 ? 1 : Math.Clamp(page, 1, totalPages);
+
+            var students = await studentsQuery
+                .OrderBy(s => s.StudentCode)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(s => new StudentListItemViewModel
+                {
+                    StudentCode = s.StudentCode,
+                    FullName = s.FullName,
+                    Address = s.Address,
+                    Email = s.Email,
+                    FacultyName = _context.Faculties
+                        .Where(f => f.FacultyId == s.FacultyId)
+                        .Select(f => f.FacultyName)
+                        .FirstOrDefault()
+                })
                 .ToListAsync();
 
-            return View(students);
+            var model = new StudentListViewModel
+            {
+                SearchTerm = searchTerm,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                Students = students
+            };
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_StudentList", model);
+            }
+
+            return View(model);
         }
 
         // CREATE - Hiển thị form thêm sinh viên
@@ -102,7 +195,18 @@ namespace DemoMVC1.Controllers
         {
             LoadFaculties();
 
-            return View();
+            if (IsAjaxRequest())
+            {
+                return PartialView("_StudentFormModal", new Student
+                {
+                    EnrollmentYear = DateTime.Now.Year
+                });
+            }
+
+            return View(new Student
+            {
+                EnrollmentYear = DateTime.Now.Year
+            });
         }
 
         // CREATE - Lưu sinh viên mới
@@ -114,8 +218,8 @@ namespace DemoMVC1.Controllers
             ModelState.Remove(nameof(Student.StudentCode));
 
             // Kiểm tra khoa có tồn tại không
-            bool facultyExists = await _context.Faculties
-                .AnyAsync(f => f.FacultyId == student.FacultyId);
+            bool facultyExists = student.FacultyId.HasValue &&
+                await _context.Faculties.AnyAsync(f => f.FacultyId == student.FacultyId);
 
             if (!facultyExists)
             {
@@ -125,20 +229,60 @@ namespace DemoMVC1.Controllers
                 );
             }
 
+            if (!student.EnrollmentYear.HasValue)
+            {
+                ModelState.AddModelError(
+                    nameof(Student.EnrollmentYear),
+                    "Vui lòng nhập năm nhập học.");
+            }
+            else if (student.EnrollmentYear < 2000 || student.EnrollmentYear > 2099)
+            {
+                ModelState.AddModelError(
+                    nameof(Student.EnrollmentYear),
+                    "Năm nhập học phải từ 2000 đến 2099.");
+            }
+
             if (ModelState.IsValid)
             {
-                student.StudentCode = await GenerateStudentCode(student.FacultyId);
+                for (var attempt = 0; attempt < 5; attempt++)
+                {
+                    student.StudentCode = await GenerateStudentCode(
+                        student.FacultyId!.Value,
+                        student.EnrollmentYear!.Value);
 
-                _context.Students.Add(student);
+                    await using var transaction =
+                        await _context.Database.BeginTransactionAsync();
 
-                await _context.SaveChangesAsync();
+                    try
+                    {
+                        _context.Students.Add(student);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        break;
+                    }
+                    catch (DbUpdateException)
+                    {
+                        await transaction.RollbackAsync();
+                        _context.Entry(student).State = EntityState.Detached;
+
+                        if (attempt == 4)
+                        {
+                            throw;
+                        }
+                    }
+                }
+
+                if (IsAjaxRequest())
+                {
+                    return Ok(new { message = "Đã thêm sinh viên thành công." });
+                }
 
                 return RedirectToAction(nameof(Index));
             }
 
             LoadFaculties(student.FacultyId);
 
-            return View(student);
+            return InvalidStudentForm(student);
         }
 
         // DETAILS - Xem chi tiết sinh viên
@@ -155,7 +299,12 @@ namespace DemoMVC1.Controllers
 
             if (student == null)
             {
-                return NotFound();
+                return StudentNotFound("Không tìm thấy sinh viên.");
+            }
+
+            if (IsAjaxRequest())
+            {
+                return PartialView("_StudentDetailsModal", student);
             }
 
             return View(student);
@@ -175,10 +324,15 @@ namespace DemoMVC1.Controllers
 
             if (student == null)
             {
-                return NotFound();
+                return StudentNotFound("Không tìm thấy sinh viên.");
             }
 
             LoadFaculties(student.FacultyId);
+
+            if (IsAjaxRequest())
+            {
+                return PartialView("_StudentFormModal", student);
+            }
 
             return View(student);
         }
@@ -191,7 +345,7 @@ namespace DemoMVC1.Controllers
         {
             if (studentCode != student.StudentCode)
             {
-                return NotFound();
+                return StudentNotFound("Mã sinh viên không khớp.");
             }
 
             // Kiểm tra sinh viên có tồn tại không
@@ -200,15 +354,15 @@ namespace DemoMVC1.Controllers
 
             if (existingStudent == null)
             {
-                return NotFound();
+                return StudentNotFound("Không tìm thấy sinh viên.");
             }
 
             // Không cho phép thay đổi mã sinh viên
             student.StudentCode = existingStudent.StudentCode;
 
             // Kiểm tra khoa được chọn
-            bool facultyExists = await _context.Faculties
-                .AnyAsync(f => f.FacultyId == student.FacultyId);
+            bool facultyExists = student.FacultyId.HasValue &&
+                await _context.Faculties.AnyAsync(f => f.FacultyId == student.FacultyId);
 
             if (!facultyExists)
             {
@@ -216,6 +370,14 @@ namespace DemoMVC1.Controllers
                     nameof(Student.FacultyId),
                     "Vui lòng chọn khoa hợp lệ."
                 );
+            }
+
+            if (student.EnrollmentYear.HasValue &&
+                (student.EnrollmentYear < 2000 || student.EnrollmentYear > 2099))
+            {
+                ModelState.AddModelError(
+                    nameof(Student.EnrollmentYear),
+                    "Năm nhập học phải từ 2000 đến 2099.");
             }
 
             // Không cần kiểm tra lại mã sinh viên từ form
@@ -226,16 +388,25 @@ namespace DemoMVC1.Controllers
                 existingStudent.FullName = student.FullName;
                 existingStudent.Email = student.Email;
                 existingStudent.Address = student.Address;
-                existingStudent.FacultyId = student.FacultyId;
+                existingStudent.FacultyId = student.FacultyId!.Value;
+                if (existingStudent.EnrollmentYear == null)
+                {
+                    existingStudent.EnrollmentYear = student.EnrollmentYear;
+                }
 
                 await _context.SaveChangesAsync();
+
+                if (IsAjaxRequest())
+                {
+                    return Ok(new { message = "Đã cập nhật sinh viên thành công." });
+                }
 
                 return RedirectToAction(nameof(Index));
             }
 
             LoadFaculties(student.FacultyId);
 
-            return View(student);
+            return InvalidStudentForm(student);
         }
 
         // DELETE - Hiển thị trang xác nhận xóa
@@ -253,7 +424,12 @@ namespace DemoMVC1.Controllers
 
             if (student == null)
             {
-                return NotFound();
+                return StudentNotFound("Không tìm thấy sinh viên.");
+            }
+
+            if (IsAjaxRequest())
+            {
+                return PartialView("_StudentDeleteModal", student);
             }
 
             return View(student);
@@ -269,12 +445,17 @@ namespace DemoMVC1.Controllers
 
             if (student == null)
             {
-                return NotFound();
+                return StudentNotFound("Không tìm thấy sinh viên.");
             }
 
             _context.Students.Remove(student);
 
             await _context.SaveChangesAsync();
+
+            if (IsAjaxRequest())
+            {
+                return Ok(new { message = "Đã xóa sinh viên thành công." });
+            }
 
             return RedirectToAction(nameof(Index));
         }

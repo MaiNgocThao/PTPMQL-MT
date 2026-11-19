@@ -26,6 +26,12 @@ namespace DemoMVC1.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Student>()
+                .HasOne(student => student.Faculty)
+                .WithMany(faculty => faculty.Students)
+                .HasForeignKey(student => student.FacultyId)
+                .IsRequired(false);
+
             // Thêm dữ liệu mẫu cho bảng Faculty
             modelBuilder.Entity<Faculty>().HasData(
             new Faculty { FacultyId =1, FacultyName = "Khoa Công nghệ thông tin" },

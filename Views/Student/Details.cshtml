@@ -1,0 +1,13 @@
+@model DemoMVC1.Models.Student
+
+@{
+    ViewData["Title"] = "Chi tiết sinh viên";
+}
+
+<h1>Chi tiết sinh viên</h1>
+<div class="card">
+    <div class="card-body">
+        <partial name="_StudentDetails" model="Model" />
+    </div>
+</div>
+<a asp-action="Index" class="btn btn-secondary mt-3">Quay lại</a>

@@ -1,0 +1,40 @@
+@model DemoMVC1.Models.Faculty
+
+@{
+    var isEdit = Model.FacultyId != 0;
+}
+
+<div class="modal-header">
+    <h2 class="modal-title fs-5">@(isEdit ? "Sửa khoa" : "Thêm khoa")</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+</div>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")"
+      asp-route-facultyId="@Model.FacultyId"
+      method="post"
+      class="faculty-ajax-form">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input asp-for="FacultyId" type="hidden" />
+    }
+    <div class="modal-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (isEdit)
+        {
+            <div class="mb-3">
+                <label asp-for="FacultyId" class="form-label">Mã khoa</label>
+                <input asp-for="FacultyId" class="form-control" readonly />
+            </div>
+        }
+        <div class="mb-3">
+            <label asp-for="FacultyName" class="form-label">Tên khoa</label>
+            <input asp-for="FacultyName" class="form-control" required />
+            <span asp-validation-for="FacultyName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-primary">@(isEdit ? "Lưu thay đổi" : "Thêm khoa")</button>
+    </div>
+</form>

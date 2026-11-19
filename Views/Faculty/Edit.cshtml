@@ -1,0 +1,23 @@
+@model DemoMVC1.Models.Faculty
+
+@{
+    ViewData["Title"] = "Sửa khoa";
+}
+
+<h1>Sửa khoa</h1>
+<form asp-action="Edit" asp-route-facultyId="@Model.FacultyId" method="post">
+    @Html.AntiForgeryToken()
+    <input asp-for="FacultyId" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="FacultyId" class="form-label">Mã khoa</label>
+        <input asp-for="FacultyId" class="form-control" readonly />
+    </div>
+    <div class="mb-3">
+        <label asp-for="FacultyName" class="form-label">Tên khoa</label>
+        <input asp-for="FacultyName" class="form-control" required />
+        <span asp-validation-for="FacultyName" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

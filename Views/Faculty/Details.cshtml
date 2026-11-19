@@ -1,0 +1,15 @@
+@model DemoMVC1.Models.Faculty
+
+@{
+    ViewData["Title"] = "Chi tiết khoa";
+}
+
+<h1>Chi tiết khoa</h1>
+<dl class="row">
+    <dt class="col-sm-3">Mã khoa</dt>
+    <dd class="col-sm-9">@Model.FacultyId</dd>
+    <dt class="col-sm-3">Tên khoa</dt>
+    <dd class="col-sm-9">@Model.FacultyName</dd>
+</dl>
+<a asp-action="Edit" asp-route-facultyId="@Model.FacultyId" class="btn btn-primary">Sửa</a>
+<a asp-action="Index" class="btn btn-secondary">Quay lại</a>

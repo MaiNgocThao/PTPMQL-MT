@@ -1,0 +1,225 @@
+@model DemoMVC1.Models.FacultyListViewModel
+
+@{
+    ViewData["Title"] = "Danh sách khoa";
+}
+
+<h1>Danh sách khoa</h1>
+
+@if (TempData["FacultyDeleteError"] != null)
+{
+    <div class="alert alert-danger">@TempData["FacultyDeleteError"]</div>
+}
+
+<p>
+    <button type="button"
+            class="btn btn-primary"
+            data-faculty-modal-url="@Url.Action("Create")">Thêm khoa</button>
+</p>
+
+<div id="faculty-crud-message" class="alert d-none" role="status" aria-live="polite"></div>
+
+<div class="row g-2 align-items-end mb-3">
+    <div class="col-md-6">
+        <label for="faculty-search-input" class="form-label">Tìm kiếm khoa</label>
+        <input id="faculty-search-input"
+               class="form-control"
+               type="search"
+               value="@Model.SearchTerm"
+               placeholder="Tên khoa"
+               autocomplete="off" />
+    </div>
+    <div class="col-auto">
+        <button id="faculty-search-button" type="button" class="btn btn-primary">Tìm kiếm</button>
+        <button id="faculty-clear-search-button" type="button" class="btn btn-outline-secondary">Xóa từ khóa</button>
+    </div>
+    <div class="col-auto ms-md-auto">
+        <label for="faculty-page-size" class="form-label">Số dòng mỗi trang</label>
+        <select id="faculty-page-size" class="form-select">
+            @foreach (var size in new[] { 5, 10, 20, 50 })
+            {
+                <option value="@size" selected="@(Model.PageSize == size)">@size</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div id="faculty-list-error" class="alert alert-danger d-none" role="alert"></div>
+<div id="faculty-list-loading" class="text-center py-3 d-none" role="status">Đang tải danh sách...</div>
+<div id="faculty-list-container" aria-live="polite">
+    <partial name="_FacultyList" model="Model" />
+</div>
+
+<div class="modal fade" id="faculty-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="faculty-modal-content"></div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(function () {
+            const $searchInput = $("#faculty-search-input");
+            const $pageSize = $("#faculty-page-size");
+            const $listContainer = $("#faculty-list-container");
+            const $loading = $("#faculty-list-loading");
+            const $error = $("#faculty-list-error");
+            const $message = $("#faculty-crud-message");
+            const $modal = $("#faculty-modal");
+            const $modalContent = $("#faculty-modal-content");
+            const modal = bootstrap.Modal.getOrCreateInstance($modal[0]);
+            let searchTimeout;
+            let activeRequest;
+            let modalRequest;
+            let currentPage = @Model.Page;
+
+            function showMessage(message, succeeded) {
+                $message.text(message)
+                    .removeClass("d-none alert-success alert-danger")
+                    .addClass(succeeded ? "alert-success" : "alert-danger");
+            }
+
+            function loadFaculties(page) {
+                if (activeRequest) activeRequest.abort();
+
+                $loading.removeClass("d-none");
+                $error.addClass("d-none").text("");
+                $listContainer.attr("aria-busy", "true");
+
+                const request = $.ajax({
+                    url: "@Url.Action("Index", "Faculty")",
+                    method: "GET",
+                    dataType: "html",
+                    data: {
+                        searchTerm: $searchInput.val(),
+                        page: page,
+                        pageSize: $pageSize.val()
+                    }
+                });
+                activeRequest = request;
+
+                request.done(function (html) {
+                    $listContainer.html(html);
+                    currentPage = Number($listContainer.find(".faculty-list-results").data("current-page")) || 1;
+                }).fail(function (_xhr, status) {
+                    if (status !== "abort") {
+                        $error.text("Không thể tải danh sách khoa. Vui lòng thử lại.")
+                            .removeClass("d-none");
+                    }
+                }).always(function () {
+                    if (activeRequest === request) {
+                        activeRequest = null;
+                        $loading.addClass("d-none");
+                        $listContainer.removeAttr("aria-busy");
+                    }
+                });
+            }
+
+            function openModal(url) {
+                if (modalRequest) modalRequest.abort();
+                $modalContent.html('<div class="modal-body text-center">Đang tải...</div>');
+                modal.show();
+
+                const request = $.ajax({ url: url, method: "GET", dataType: "html" });
+                modalRequest = request;
+
+                request.done(function (html) {
+                    if (modalRequest === request) {
+                        $modalContent.html(html);
+                        $.validator.unobtrusive.parse($modalContent);
+                    }
+                }).fail(function (_xhr, status) {
+                    if (status !== "abort" && modalRequest === request) {
+                        $modalContent.html('<div class="modal-body"><div class="alert alert-danger mb-0">Không thể tải thông tin khoa.</div></div>');
+                    }
+                }).always(function () {
+                    if (modalRequest === request) modalRequest = null;
+                });
+            }
+
+            $(document).on("click", "[data-faculty-modal-url]", function (event) {
+                event.preventDefault();
+                $message.addClass("d-none");
+                openModal($(this).attr("data-faculty-modal-url"));
+            });
+
+            $modalContent.on("submit", ".faculty-ajax-form", function (event) {
+                event.preventDefault();
+                const $form = $(this);
+                if ($form.data("validator") && !$form.valid()) return;
+
+                const $submitButton = $form.find('[type="submit"]');
+                const originalText = $submitButton.text();
+                $submitButton.prop("disabled", true).text("Đang xử lý...");
+
+                $.ajax({
+                    url: $form.attr("action"),
+                    method: $form.attr("method") || "POST",
+                    data: $form.serialize()
+                }).done(function (result) {
+                    modal.hide();
+                    showMessage(result.message, true);
+                    loadFaculties(currentPage);
+                }).fail(function (xhr) {
+                    if (xhr.status === 422 && xhr.responseText) {
+                        $modalContent.html(xhr.responseText);
+                        $.validator.unobtrusive.parse($modalContent);
+                        return;
+                    }
+                    showMessage(xhr.responseJSON?.message || "Không thể lưu khoa.", false);
+                }).always(function () {
+                    $submitButton.prop("disabled", false).text(originalText);
+                });
+            });
+
+            $modalContent.on("submit", ".faculty-delete-form", function (event) {
+                event.preventDefault();
+                const $form = $(this);
+
+                $.ajax({
+                    url: $form.attr("action"),
+                    method: "POST",
+                    data: $form.serialize()
+                }).done(function (result) {
+                    modal.hide();
+                    showMessage(result.message, true);
+                    loadFaculties(currentPage);
+                }).fail(function (xhr) {
+                    showMessage(xhr.responseJSON?.message || "Không thể xóa khoa.", false);
+                });
+            });
+
+            $("#faculty-search-button").on("click", function () { loadFaculties(1); });
+            $("#faculty-clear-search-button").on("click", function () {
+                $searchInput.val("");
+                loadFaculties(1);
+                $searchInput.trigger("focus");
+            });
+
+            $searchInput.on("input", function () {
+                window.clearTimeout(searchTimeout);
+                searchTimeout = window.setTimeout(function () { loadFaculties(1); }, 350);
+            });
+
+            $searchInput.on("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    window.clearTimeout(searchTimeout);
+                    loadFaculties(1);
+                }
+            });
+
+            $pageSize.on("change", function () { loadFaculties(1); });
+
+            $listContainer.on("click", ".faculty-page-link", function (event) {
+                event.preventDefault();
+                if ($(this).closest(".page-item").hasClass("disabled") ||
+                    $(this).closest(".page-item").hasClass("active")) return;
+                loadFaculties(Number($(this).data("page")));
+            });
+        });
+    </script>
+}
